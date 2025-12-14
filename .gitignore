@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+*.o
+*.bin
+*.elf
+
+# Generated code (regenerate with ./regenerate.sh)
+src/stm32/
+
+# SVD files (download separately, ~1-4MB each)
+svd/
+*.svd
+
+# svd2odin binary
+svd2odin/svd2odin
+
+# Old/temp files
+old/
+cubemx*
+wip/

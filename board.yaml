@@ -1,0 +1,184 @@
+# STM32F303 Discovery Board Configuration
+# STM32F303VCT6 - ARM Cortex-M4F @ 72 MHz, 256KB Flash, 40KB SRAM + 8KB CCM
+# Onboard: L3GD20 Gyro, LSM303DLHC Accel/Mag, 8 LEDs
+
+device:
+  svd: STM32F303.svd
+  mcu: STM32F303VCTx
+  package_name: f303_discovery
+
+board:
+  name: stm32f303_discovery
+  description: STMicroelectronics STM32F303 Discovery Board
+
+# Memory configuration
+memory:
+  flash:
+    origin: 0x08000000
+    size: 262144  # 256K
+  ram:
+    origin: 0x20000000
+    size: 40960   # 40K (main SRAM only; 8K CCM at 0x10000000 not included)
+  stack:
+    size: 8192    # 8K
+    protection: canary
+
+# Clock configuration
+# Using HSI (8 MHz internal) for simplicity
+# In production, would use HSE + PLL for 72 MHz
+clocks:
+  hsi_hz: 8000000       # Internal oscillator
+  system_hz: 8000000    # System clock (using HSI directly)
+  pclk1_hz: 8000000     # APB1 peripheral clock
+  pclk2_hz: 8000000     # APB2 peripheral clock
+
+# GPIO Configuration
+gpio:
+  # User LEDs (8 LEDs on the board in compass pattern)
+  # LD3 (PE9), LD4 (PE8), LD5 (PE10), LD6 (PE15)
+  # LD7 (PE11), LD8 (PE14), LD9 (PE12), LD10 (PE13)
+  - name: LD3
+    port: GPIOE
+    pin: 9
+    mode: output
+    description: North LED (Red)
+
+  - name: LD4
+    port: GPIOE
+    pin: 8
+    mode: output
+    description: North-West LED (Orange)
+
+  - name: LD5
+    port: GPIOE
+    pin: 10
+    mode: output
+    description: North-East LED (Orange)
+
+  - name: LD6
+    port: GPIOE
+    pin: 15
+    mode: output
+    description: West LED (Green)
+
+  - name: LD7
+    port: GPIOE
+    pin: 11
+    mode: output
+    description: East LED (Green)
+
+  - name: LD8
+    port: GPIOE
+    pin: 14
+    mode: output
+    description: South-West LED (Orange)
+
+  - name: LD9
+    port: GPIOE
+    pin: 12
+    mode: output
+    description: South-East LED (Blue)
+
+  - name: LD10
+    port: GPIOE
+    pin: 13
+    mode: output
+    description: South LED (Red)
+
+  # User button
+  - name: USER_BUTTON
+    port: GPIOA
+    pin: 0
+    mode: input
+    pull: none
+    active_high: true
+    description: User button (Blue button)
+
+  # SPI Chip Select pins (active low)
+  - name: GYRO_CS
+    port: GPIOE
+    pin: 3
+    mode: output
+    description: L3GD20 Gyro CS (active low)
+
+  - name: SPI1_CS_SD
+    port: GPIOB
+    pin: 0
+    mode: output
+    description: SPI1 Chip Select for SD Card
+
+  - name: SPI1_CS_RADIO
+    port: GPIOB
+    pin: 1
+    mode: output
+    description: SPI1 Chip Select for Radio/LoRa
+
+  - name: SPI1_CS_ADC
+    port: GPIOB
+    pin: 10
+    mode: output
+    description: SPI1 Chip Select for ADC
+
+# Peripheral Configuration
+# Note: "af" = Alternate Function (0-15). Each GPIO pin can connect to different
+# peripherals via AF muxing. See STM32F303 datasheet Table 14 for AF mappings.
+peripherals:
+  # Debug UART (using USART1 on PC4/PC5 - ST-Link VCP)
+  - name: debug_uart
+    peripheral: USART1
+    interface: uart
+    baud: 115200
+    tx:
+      port: GPIOC
+      pin: 4
+      af: 7
+    rx:
+      port: GPIOC
+      pin: 5
+      af: 7
+
+  # SPI1 for external peripherals (SD card, RFM9x LoRa, ADC, etc.)
+  # Using PA5 (SCK), PA6 (MISO), PA7 (MOSI)
+  - name: spi1
+    peripheral: SPI1
+    interface: spi
+    mode: 0  # SPI mode 0 (CPOL=0, CPHA=0)
+    speed: 125000  # 125 kHz (8MHz / 64) - slower for reliability
+    data_size: 8  # 8-bit transfers
+    bit_order: msb  # MSB first
+    sck:
+      port: GPIOA
+      pin: 5
+      af: 5
+    miso:
+      port: GPIOA
+      pin: 6
+      af: 5
+    mosi:
+      port: GPIOA
+      pin: 7
+      af: 5
+    # CS pins are usually GPIO, not AF
+    # We'll define them as separate GPIOs for flexibility
+
+  # I2C1 for external peripherals (OLED, IMU, RTC, etc.)
+  # Using PB6 (SCL), PB7 (SDA)
+  - name: i2c1
+    peripheral: I2C1
+    interface: i2c
+    speed: 100000  # 100 kHz standard mode
+    scl:
+      port: GPIOB
+      pin: 6
+      af: 4
+    sda:
+      port: GPIOB
+      pin: 7
+      af: 4
+
+  # DMA controller
+  - name: dma1
+    peripheral: DMA1
+    interface: dma
+    enable: true
+

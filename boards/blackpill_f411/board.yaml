@@ -1,0 +1,63 @@
+# WeAct Black Pill F411CE Board Configuration
+# STM32F411CEU6 - ARM Cortex-M4 @ 100 MHz, 512KB Flash, 128KB RAM
+
+device:
+  svd: STM32F411.svd
+  mcu: STM32F411CEU6
+  package_name: blackpill_f411ce
+  gpio_use_odr: false  # Test if F411 BSRR works (unlike damaged F401RE)
+
+board:
+  name: blackpill_f411ce
+  description: WeAct Black Pill STM32F411CEU6 Development Board
+
+# Memory configuration
+memory:
+  flash:
+    origin: 0x08000000
+    size: 524288  # 512K
+  ram:
+    origin: 0x20000000
+    size: 131072  # 128K
+  stack:
+    size: 8192    # 8K
+    protection: canary
+
+# Clock configuration
+# Using HSI (16 MHz internal oscillator) for simplicity
+clocks:
+  hsi_hz: 16000000      # Internal oscillator
+  system_hz: 16000000   # System clock (using HSI directly)
+  pclk1_hz: 16000000    # APB1 peripheral clock
+  pclk2_hz: 16000000    # APB2 peripheral clock
+
+# GPIO Configuration
+gpio:
+  - name: LED
+    port: GPIOC
+    pin: 13
+    mode: output
+    active_high: false
+    description: Onboard LED (active low)
+
+# Peripheral Configuration
+peripherals:
+  # Debug UART on USART1 (PA9/PA10)
+  - name: debug_uart
+    peripheral: USART1
+    interface: uart
+    baud: 115200
+    tx:
+      port: GPIOA
+      pin: 9
+      af: 7
+    rx:
+      port: GPIOA
+      pin: 10
+      af: 7
+
+  # DMA controller
+  - name: dma1
+    peripheral: DMA1
+    interface: dma
+    enable: true
